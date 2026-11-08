@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BlockT</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="event-block.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><span>BlockT</span></div>
+        <nav class="main-nav" aria-label="Block categories">
+          <button class="nav-item" data-category="events"><span class="nav-icon">⚑</span> Events</button>
+          <button class="nav-item active" data-category="files"><span class="nav-icon file-icon">▰</span> Files</button>
+          <button class="nav-item" data-category="system"><span class="nav-icon">&#9881;</span> System</button>
+          <button class="nav-item" data-category="input"><span class="nav-icon">&#8997;</span> Input</button>
+          <button class="nav-item" data-category="detection"><span class="nav-icon">&#9678;</span> Detection</button>
+          <button class="nav-item" data-category="loops"><span class="nav-icon">&#10227;</span> Loops</button>
+          <button class="nav-item" data-category="variables"><span class="nav-icon">&#8801;</span> Variables</button>
+          <button class="nav-item" data-category="functions"><span class="nav-icon">ƒ</span> Functions</button>
+        </nav>
+        <div class="macro-library">
+          <p class="library-label">Recent flows</p>
+          <div id="macroLibraryList" class="macro-library-list" aria-label="Recent flows"></div>
+          <button class="new-macro" id="openFlowLibrary">View all flows</button>
+          <button class="new-macro" id="newMacro">+ New flow</button>
+        </div>
+      </aside>
+
+      <section class="palette-panel">
+        <label class="search-box"><span>⌕</span><input id="blockSearch" type="search" placeholder="Search blocks" /></label>
+        <div class="palette-heading"><span class="palette-dot files-dot"></span><span id="categoryTitle">Files</span></div>
+        <div id="blockPalette" class="block-palette" aria-label="Available blocks"></div>
+        <p class="palette-hint">Drag a block onto the workspace</p>
+      </section>
+
+      <section class="editor">
+        <header class="topbar">
+          <div class="editor-actions">
+            <button class="icon-button" id="undoButton" title="Undo last change" aria-label="Undo">↶</button>
+            <button class="icon-button" id="aiButton" title="Create blocks with GitHub Models" aria-label="Create blocks with GitHub Models">✦</button>
+            <button class="icon-button" id="settingsButton" title="Settings" aria-label="Settings">⚙</button>
+            <button class="run-button" id="stopButton" hidden>Stop</button>
+            <button class="run-button" id="runButton">Run</button>
+          </div>
+        </header>
+        <div class="workspace-wrap">
+          <div class="mode-switch workspace-mode-switch" role="tablist" aria-label="Editor mode">
+            <button class="mode active" role="tab" aria-selected="true">Visual blocks</button>
+            <button class="mode" role="tab" aria-selected="false">Code view</button>
+          </div>
+          <div id="workspace" class="workspace" aria-label="Macro block workspace">
+            <div class="workspace-grid"></div>
+            <div id="scriptBoard" class="script-board"></div>
+            <div id="dropHint" class="drop-hint">Drop blocks here to build your macro</div>
+          </div>
+          <section id="codeView" class="code-view" hidden aria-label="JavaScript code editor">
+            <div class="code-toolbar"><span id="codeScriptTitle">script.js</span><button id="applyCode" class="apply-code">Apply to selected script</button></div>
+            <textarea id="codeEditor" spellcheck="false" aria-label="Macro JavaScript"></textarea>
+            <p class="code-help">Code view edits the selected script. Update the <code>workspace location: x=..., y=...</code> comment to move that script, then apply. Use <code>macro.run(async () =&gt; { ... })</code> for actions.</p>
+          </section>
+        </div>
+        <footer class="statusbar">
+          <span>FLOW: <strong id="macroTitle">UNTITLED FLOW</strong></span><span class="status-divider"></span><span id="stepCount">0 STEPS</span><span class="status-divider"></span><span>STATUS: <strong id="runStatus">READY</strong></span>
+          <button class="save-button" id="saveButton">Save</button>
+        </footer>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="confirmDialog" class="confirm-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="confirm-panel">
+        <h2 id="confirmTitle">Delete script?</h2>
+        <p>Do you really want to delete this item?</p>
+        <div class="confirm-actions">
+          <button id="cancelDelete" class="dialog-button">Cancel</button>
+          <button id="confirmDelete" class="dialog-button danger">Delete</button>
+        </div>
+      </div>
+    </div>
+    <div id="settingsDialog" class="confirm-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="confirm-panel settings-panel">
+        <h2 id="settingsTitle">Settings</h2>
+        <label class="settings-field">Run shortcut<input id="runShortcutInput" class="shortcut-input" value="F8" readonly aria-label="Run shortcut" /></label>
+        <p id="shortcutMessage">Press a function key to set the global shortcut.</p>
+        <label class="settings-field">AI provider<select id="aiProviderInput" class="shortcut-input" aria-label="AI provider"><option value="github">GitHub Models</option><option value="openai">OpenAI / ChatGPT</option><option value="gemini">Google Gemini</option><option value="anthropic">Anthropic Claude</option><option value="local">Local OpenAI-compatible server</option></select></label>
+        <label class="settings-field">Model<input id="aiModelInput" class="shortcut-input" autocomplete="off" placeholder="Provider default" aria-label="AI model" /></label>
+        <label class="settings-field">Endpoint<input id="aiEndpointInput" class="shortcut-input" autocomplete="off" placeholder="Only for local server" aria-label="AI endpoint" /></label>
+        <label class="settings-field" id="aiTokenField">API key<input id="aiTokenInput" class="shortcut-input" type="password" autocomplete="off" placeholder="Paste API key" aria-label="AI API key" /></label>
+        <p id="aiConfigMessage">Provider keys are stored with Windows credential encryption. Local servers use an OpenAI-compatible chat-completions endpoint.</p>
+        <div class="confirm-actions">
+          <button id="saveAiConfig" class="dialog-button">Save AI</button>
+          <button id="openExecutionLog" class="dialog-button">Open log folder</button>
+          <button id="closeSettings" class="dialog-button">Done</button>
+        </div>
+      </div>
+    </div>
+    <div id="functionDialog" class="confirm-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="functionTitle">
+      <form id="functionForm" class="confirm-panel settings-panel">
+        <h2 id="functionTitle">Save function</h2>
+        <p id="functionDescription">The selected block and the blocks below it will become one reusable function.</p>
+        <label class="settings-field">Function name<input id="functionNameInput" class="shortcut-input" maxlength="48" required placeholder="Example: sign in" aria-label="Function name" /></label>
+        <div class="confirm-actions">
+          <button type="button" id="cancelFunction" class="dialog-button">Cancel</button>
+          <button type="submit" class="dialog-button primary">Create function</button>
+        </div>
+      </form>
+    </div>
+    <div id="macroSaveDialog" class="confirm-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="macroSaveTitle">
+      <form id="macroSaveForm" class="confirm-panel settings-panel">
+        <h2 id="macroSaveTitle">Save flow</h2>
+        <label class="settings-field">Flow name<input id="macroNameInput" class="shortcut-input" maxlength="60" required placeholder="Example: Daily report" aria-label="Flow name" /></label>
+        <div class="confirm-actions">
+          <button type="button" id="cancelMacroSave" class="dialog-button">Cancel</button>
+          <button type="submit" class="dialog-button primary">Save flow</button>
+        </div>
+      </form>
+    </div>
+    <div id="flowLibraryDialog" class="confirm-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="flowLibraryTitle">
+      <section class="confirm-panel settings-panel flow-library-panel">
+        <h2 id="flowLibraryTitle">Flow library</h2>
+        <div id="flowLibraryList" class="flow-library-list" aria-label="All saved flows"></div>
+        <div class="confirm-actions"><button type="button" id="closeFlowLibrary" class="dialog-button">Done</button></div>
+      </section>
+    </div>
+    <div id="appPickerDialog" class="confirm-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="appPickerTitle">
+      <section class="confirm-panel settings-panel app-picker-panel">
+        <h2 id="appPickerTitle">Choose active app</h2>
+        <p>Choose the application this flow should run inside.</p>
+        <div id="openAppsList" class="open-apps-list" aria-label="Open applications"></div>
+        <div class="confirm-actions"><button type="button" id="refreshOpenApps" class="dialog-button">Refresh</button><button type="button" id="cancelAppPicker" class="dialog-button">Cancel</button></div>
+      </section>
+    </div>
+    <div id="aiDialog" class="confirm-dialog" hidden role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+      <form id="aiForm" class="confirm-panel ai-panel">
+        <h2 id="aiTitle">Create blocks with AI</h2>
+        <p>Describe the macro. Optionally include a current screen snapshot so the model can propose Detection areas and colors.</p>
+        <label class="settings-field">Use AI<select id="aiGenerationProvider" class="shortcut-input" aria-label="AI used for generation"><option value="github">GitHub Models</option><option value="openai">OpenAI / ChatGPT</option><option value="gemini">Google Gemini</option><option value="anthropic">Anthropic Claude</option><option value="local">Local OpenAI-compatible server</option></select></label>
+        <label class="settings-field">What should this macro do?<textarea id="aiPromptInput" rows="5" maxlength="2000" required placeholder="Wait for the green Start button, click it, then type the report title."></textarea></label>
+        <label class="ai-screen-option"><input id="aiIncludeScreen" type="checkbox" /> Include current screen snapshot</label>
+        <p id="aiMessage">Your GitHub Models token is configured in Settings.</p>
+        <div class="confirm-actions">
+          <button type="button" id="cancelAi" class="dialog-button">Cancel</button>
+          <button type="submit" id="generateAiBlocks" class="dialog-button primary">Generate blocks</button>
+        </div>
+      </form>
+    </div>
+    <menu id="blockContextMenu" class="block-context-menu" hidden aria-label="Block actions">
+      <button type="button" data-menu-action="function">Make function</button>
+      <button type="button" data-menu-action="copy">Copy stack</button>
+      <button type="button" data-menu-action="paste">Paste below</button>
+      <hr />
+      <button type="button" class="danger" data-menu-action="delete">Delete block</button>
+    </menu>
+    <div id="dragPreview" class="drag-preview" hidden></div>
+    <script src="app.js"></script>
+  </body>
+</html>

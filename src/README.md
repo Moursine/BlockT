@@ -1,0 +1,47 @@
+# BlockT
+
+BlockT is a Windows desktop automation app. Build flows with visual blocks, then run actions such as opening programs, typing, pressing keys, moving or clicking the mouse, waiting for conditions, and restricting actions to a selected active application.
+
+## Requirements
+
+- Windows 10 or later
+- Node.js 20 or later
+- npm 10 or later
+
+## Run Locally
+
+```powershell
+npm ci
+npm start
+```
+
+## Build The Windows Installer
+
+```powershell
+npm run dist
+```
+
+The NSIS installer is created at:
+
+```text
+dist/BlockT Setup <version>.exe
+```
+
+## Variables
+
+- `Set variable`: `a = 3`
+- `Random variable`: `roll = 1 to 6` (either end can be another variable)
+- `Change variable`: `a + 1`, `a - b`, or `a + 1 to 5` for a random amount
+- `Wait` and `Repeat` accept a variable: `a`, `"a" second`, `a times`
+
+## Project Structure
+
+```text
+app.js             Renderer logic and visual flow editor
+main.js            Electron main process and Windows automation
+preload.js         Context-isolated IPC bridge
+index.html         Application shell
+styles.css         Base application styles
+event-block.css    Block-editor styles
+assets/            Application assets
+```

@@ -1,0 +1,48 @@
+{
+  "name": "blockt",
+  "version": "1.0.1",
+  "description": "A visual desktop automation editor",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis",
+    "release": "electron-builder --win nsis --publish always"
+  },
+  "build": {
+    "appId": "com.flowforge.app",
+    "productName": "BlockT",
+    "files": [
+      "index.html",
+      "styles.css",
+      "event-block.css",
+      "app.js",
+      "main.js",
+      "preload.js",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "BlockT Setup ${version}.exe",
+      "icon": "assets/blockt-icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Oiet0",
+        "repo": "BlockT"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12"
+  }
+}
